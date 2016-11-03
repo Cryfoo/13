@@ -1,0 +1,64 @@
+<script type="text/javascript" src="/socket.io/socket.io.js"></script>
+<script type="text/javascript">
+	function attach_animation() {
+		$(".cards").hover(function() {
+			$(this).animate({"top": "-10px"}, "fast");
+		}, function() {
+			$(this).animate({"top": "0px"}, "fast");
+		}).click(function() {
+			$(this).toggleClass("selected");
+		});
+	}
+
+	$(document).ready(function() {
+		var socket = io.connect();
+		socket.on("user_connect", function(data) {
+			$("#msg_block").append('<p class="message">' + data.user + ' connected.</p>');
+		});
+		socket.on("user_disconnect", function(data) {
+			$("#msg_block").append('<p class="message">' + data.user + ' disconnected.</p>');
+		});
+
+		socket.on("player_turn", function(data) {
+			$("#turn_alert").empty();
+			$("#turn_alert").append(data.player + "'s turn!");
+		});
+		socket.on("cards", function(data) {
+			$("#my_hand").empty();
+			$("#my_hand").append('<img src="static/img/blank.png" style="position: relative; width: 21%;">');
+			for (var i = 0; i < data.cards.length; i++) {
+				$("#my_hand").append('<img src="static/img/' + data.cards[i] + '.png" alt="img of a card" class="cards" style="left:' + (i*30) + 'px;">');
+			}
+			attach_animation();
+		});
+		$("#play").click(function() {
+			var selected = [];
+			$(".selected").each(function(index) {
+				selected.push($(this).attr("src").substring(11, 14));
+			});
+			socket.emit("play", {selected: selected});
+		});
+		$("#pass").click(function() {
+			socket.emit("pass_turn");
+		});
+
+		socket.on("current_player", function(data) {
+			$("#player").empty();
+			$("#player").append("player: " + data.user);
+		});
+	});
+</script>
+<div class="row">
+	<h1 class="text-center">Game of 13</h1>
+	<h1 class="text-center" id="turn_alert"></h1>
+	<div class="col-md-5 col-md-offset-3" id="my_hand">
+	</div>
+	<button id="play">Play</button>
+	<button id="pass">Pass</button>
+</div>
+<div class="row">
+	<div class="col-ms-6 col-md-offset-3" id="player">
+	</div>
+	<div class="col-md-6 col-md-offset-3" id="msg_block">
+	</div>	
+</div>

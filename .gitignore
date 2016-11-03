@@ -1,0 +1,4 @@
+# Ignore files and folders
+
+/bower_components/*
+/node_modules/*

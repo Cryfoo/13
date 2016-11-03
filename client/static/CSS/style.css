@@ -1,0 +1,20 @@
+.cards {
+	width: 20%;
+	position: absolute;
+	top: 0px;
+}
+
+.selected {
+	top: -10px !important;
+}
+
+#msg_block {
+	margin-top: 20px;
+	outline: 1px solid black;
+	height: 100px;
+	overflow-y: auto;
+}
+
+.message {
+	margin: 0px;
+}
