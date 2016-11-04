@@ -12,45 +12,69 @@
 
 	$(document).ready(function() {
 		var socket = io.connect();
+		var player;
+		var current_turn;
+
+		$("#play").click(function() {
+			if (current_turn == player) {
+				var selected = [];
+				$(".selected").each(function(index) {
+					selected.push($(this).attr("src").substring(11, 14));
+				});
+				socket.emit("play", {selected: selected});
+			}
+		});
+		$("#pass").click(function() {
+			socket.emit("pass_turn");
+		});
+
 		socket.on("user_connect", function(data) {
 			$("#msg_block").append('<p class="message">' + data.user + ' connected.</p>');
 		});
 		socket.on("user_disconnect", function(data) {
 			$("#msg_block").append('<p class="message">' + data.user + ' disconnected.</p>');
 		});
-
-		socket.on("player_turn", function(data) {
-			$("#turn_alert").empty();
-			$("#turn_alert").append(data.player + "'s turn!");
+		socket.on("reset", function(data) {
+			$("#played").empty();
+			$("#played").append('<img src="static/img/blank.png" style="position: relative; width: 21%;">');
+			$("#wrong_msg").empty();
 		});
-		socket.on("cards", function(data) {
-			$("#my_hand").empty();
-			$("#my_hand").append('<img src="static/img/blank.png" style="position: relative; width: 21%;">');
-			for (var i = 0; i < data.cards.length; i++) {
-				$("#my_hand").append('<img src="static/img/' + data.cards[i] + '.png" alt="img of a card" class="cards" style="left:' + (i*30) + 'px;">');
+		socket.on("current_turn", function(data) {
+			current_turn = data.player;
+			$("#turn_alert").html("<h1 class='text-center'>" + data.player + "'s turn!</h1>");
+		});
+		socket.on("new_round", function(data) {
+			$("#turn_alert").append("<h1 class='text-center'>" + data.player + " won the round. " + data.player + " may play any combination.</h1>");
+		});
+		socket.on("cards_played", function(data) {
+			for (var i = 0; i < data.played.length; i++) {
+				$("#played").append('<img src="static/img/' + data.played[i] + '.png" alt="img of a card" class="played" style="left:' + (i*30) + 'px;">');
+			}
+		});
+		socket.on("player_hand", function(data) {
+			$("#my_hand").html('<img src="static/img/blank.png" style="position: relative; width: 21%;">');
+			for (var i = 0; i < data.hand.length; i++) {
+				$("#my_hand").append('<img src="static/img/' + data.hand[i] + '.png" alt="img of a card" class="cards" style="left:' + (i*30) + 'px;">');
 			}
 			attach_animation();
 		});
-		$("#play").click(function() {
-			var selected = [];
-			$(".selected").each(function(index) {
-				selected.push($(this).attr("src").substring(11, 14));
-			});
-			socket.emit("play", {selected: selected});
-		});
-		$("#pass").click(function() {
-			socket.emit("pass_turn");
+		socket.on("wrong_cards", function(data) {
+			$("#wrong_msg").html(data.response);
 		});
 
 		socket.on("current_player", function(data) {
-			$("#player").empty();
-			$("#player").append("player: " + data.user);
+			player = data.user;
+			$("#player").html("player: " + data.user);
 		});
 	});
 </script>
 <div class="row">
 	<h1 class="text-center">Game of 13</h1>
-	<h1 class="text-center" id="turn_alert"></h1>
+	<div class="col-md-12" id="turn_alert"></div>
+	<div class="col-md-5 col-md-offset-3" id="played">
+	</div>
+</div>
+<div class="row">
 	<div class="col-md-5 col-md-offset-3" id="my_hand">
 	</div>
 	<button id="play">Play</button>
@@ -58,6 +82,8 @@
 </div>
 <div class="row">
 	<div class="col-ms-6 col-md-offset-3" id="player">
+	</div>
+	<div class="col-ms-6 col-md-offset-3" id="wrong_msg">
 	</div>
 	<div class="col-md-6 col-md-offset-3" id="msg_block">
 	</div>	
