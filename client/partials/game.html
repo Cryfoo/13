@@ -1,12 +1,27 @@
 <script type="text/javascript" src="/socket.io/socket.io.js"></script>
 <script type="text/javascript">
+	function attach_deck() {
+		var margin = ($("#played").innerWidth()-100) / 2;
+		for (var i = 0; i < 6; i++) {
+			$("#played").append('<img src="static/img/card01.jpg" alt="img of a card" class="played img-rounded" style="left: ' + (margin-i*5) + 'px; top: ' + (15-i*5) + 'px;">');
+		}
+	}
 	function attach_animation() {
 		$(".cards").hover(function() {
-			$(this).animate({"top": "-10px"}, "fast");
-		}, function() {
 			$(this).animate({"top": "0px"}, "fast");
+		}, function() {
+			$(this).animate({"top": "10px"}, "fast");
 		}).click(function() {
 			$(this).toggleClass("selected");
+		});
+	}
+	function attach_zoom() {
+		$(".discarded").hover(function() {
+			$(this).css("z-index", "1");
+			$(this).animate({"width": "150px"}, "fast");
+		}, function() {
+			$(this).css("z-index", 0);
+			$(this).animate({"width": "70px"}, "fast");
 		});
 	}
 
@@ -14,7 +29,11 @@
 		var socket = io.connect();
 		var player;
 		var current_turn;
+		attach_deck();
 
+		$("#ready").click(function() {
+			socket.emit("ready");
+		});
 		$("#play").click(function() {
 			if (current_turn == player) {
 				var selected = [];
@@ -22,10 +41,16 @@
 					selected.push($(this).attr("src").substring(11, 14));
 				});
 				socket.emit("play", {selected: selected});
+			} else {
+				$("#wrong_msg").html("It's not your turn!");
 			}
 		});
 		$("#pass").click(function() {
-			socket.emit("pass_turn");
+			if (current_turn == player) {
+				socket.emit("pass_turn");
+			} else {
+				$("#wrong_msg").html("It's not your turn!");
+			}
 		});
 
 		socket.on("user_connect", function(data) {
@@ -34,29 +59,185 @@
 		socket.on("user_disconnect", function(data) {
 			$("#msg_block").append('<p class="message">' + data.user + ' disconnected.</p>');
 		});
-		socket.on("reset", function(data) {
-			$("#played").empty();
-			$("#played").append('<img src="static/img/blank.png" style="position: relative; width: 21%;">');
+		socket.on("ready", function(data) {
+			var playersReady = "";
+			if (data.ready.length == 1) {
+				playersReady = data.ready[0] + " is ready.";
+			} else {
+				for (var i = 0; i < data.ready.length-1; i++) {
+					playersReady += data.ready[i] + ", ";
+				}
+				playersReady += "and " + data.ready[data.ready.length-1] + " are ready.";
+			}
+			$("#game_msg").html("<h1 class='text-center'>" + playersReady + "</h1>");
+		});
+		socket.on("starting_hand", function(data) {
+			$("#played").empty(); // to clear the attach_deck()
+			var margin = ($("#played").innerWidth()-100) / 2;
+			for (var i = 0; i < 13; i++) {			
+				$("#played").append('<img src="static/img/card01.jpg" alt="img of a card" class="deck_t img-rounded" style="top: 15px; left: ' + margin + 'px;">');
+				$("#played").append('<img src="static/img/card01.jpg" alt="img of a card" class="deck_l img-rounded" style="top: 15px; left: ' + margin + 'px;">');
+				$("#played").append('<img src="static/img/card01.jpg" alt="img of a card" class="deck_r img-rounded" style="top: 15px; right: ' + margin + 'px;">');
+				$("#played").append('<img src="static/img/' + data.hand[i] + '.png" alt="img of a card" class="deck_b img-rounded" style="top: 15px; left: ' + margin + 'px;">');
+			}
+		});
+		socket.on("start", function() {
+			$("#ready").addClass("hide");
 			$("#wrong_msg").empty();
+			$("#discard_pile").empty(); // to clear the discard pile from previous game
+			$(".deck_t").each(function (index) {
+				$(this).animate({"font-size": "180px", "top": "-338.21px", "left": (index*30+33) + "px"}, {
+					duration: 500,
+					step: function(now, fx) {
+						$(this).css("transform", "rotate(" + now + "deg)");
+					}
+				});
+			});
+			$(".deck_l").each(function (index) {
+				$(this).animate({"font-size": "90px", "top": ((index*30)-190) + "px", "left": "-144px"}, {
+					duration: 500,
+					step: function(now, fx) {
+						$(this).css("transform", "rotate(" + now + "deg)");
+					}
+				});
+			});
+			$(".deck_r").each(function (index) {
+				$(this).animate({"font-size": "-90px", "top": ((index*30)-190) + "px", "right": "-144px"}, {
+					duration: 500,
+					step: function(now, fx) {
+						$(this).css("transform", "rotate(" + now + "deg)");
+					}
+				});
+			});
+			$(".deck_b").each(function (index) {
+				$(this).animate({"top": "325px", "left": (index*30+33) + "px"}, 500);
+			});
 		});
 		socket.on("current_turn", function(data) {
 			current_turn = data.player;
-			$("#turn_alert").html("<h1 class='text-center'>" + data.player + "'s turn!</h1>");
-		});
-		socket.on("new_round", function(data) {
-			$("#turn_alert").append("<h1 class='text-center'>" + data.player + " won the round. " + data.player + " may play any combination.</h1>");
-		});
-		socket.on("cards_played", function(data) {
-			for (var i = 0; i < data.played.length; i++) {
-				$("#played").append('<img src="static/img/' + data.played[i] + '.png" alt="img of a card" class="played" style="left:' + (i*30) + 'px;">');
-			}
+			$("#game_msg").html("<h1 class='text-center'>" + data.player + "'s turn!</h1>");
 		});
 		socket.on("player_hand", function(data) {
-			$("#my_hand").html('<img src="static/img/blank.png" style="position: relative; width: 21%;">');
-			for (var i = 0; i < data.hand.length; i++) {
-				$("#my_hand").append('<img src="static/img/' + data.hand[i] + '.png" alt="img of a card" class="cards" style="left:' + (i*30) + 'px;">');
+			$("#played").empty(); // to clear the cards used to animate dealing out
+			$("#play").removeClass("hide");
+			$("#pass").removeClass("hide");
+			$("#top_hand").empty();
+			for(var i = 0; i < data.hand[2]; i++) {
+				$("#top_hand").append('<img src="static/img/card01.jpg" alt="img of a card" class="top img-rounded" style="left: ' + ((i+1)*30) + 'px;">');
+			}
+			$("#left_hand").empty();
+			for(var i = 0; i < data.hand[3]; i++) {
+				$("#left_hand").append('<img src="static/img/card01.jpg" alt="img of a card" class="left img-rounded" style="top: ' + ((i*30)-10) + 'px;">');
+			}
+			$("#right_hand").empty();
+			for(var i = 0; i < data.hand[1]; i++) {
+				$("#right_hand").append('<img src="static/img/card01.jpg" alt="img of a card" class="right img-rounded" style="top: ' + ((i*30)-10) + 'px;">');
+			}
+			$(".cards").remove();
+			for (var i = 0; i < data.hand[0].length; i++) {
+				$("#my_hand").append('<img src="static/img/' + data.hand[0][i] + '.png" alt="img of a card" class="cards img-rounded" style="left:' + ((i+1)*30) + 'px;">');
 			}
 			attach_animation();
+		});
+		socket.on("animate_cards", function(data) {
+			var element = "." + data.direction;
+			var start = 30;
+			if (data.direction == "bottom") {
+				$(".selected").each(function(index) {
+					$(this).removeClass("selected");
+					$(this).unbind("mouseenter mouseleave");
+					$(this).addClass("played");
+					$(this).css("z-index", "2");
+					$(this).animate({"top": "-300px", "left": (index*30+130) + "px"}, 500);
+				});
+				element = ".cards";
+			} else {
+				if (data.direction != "top") {
+					start = -10;
+				}
+				var counter = 0;
+				$(element).each(function(index) {
+					if (index == data.indices[counter]) {
+						if (data.direction == "right") {
+							$(this).css("transform", "translate(-" + (586-counter*30) + "px, " + (205-index*30) + "px)");
+						} else if (data.direction == "top") {
+							$(this).css("transform", "translate(" + (100+(counter-index)*30) + "px, 353px)");
+						} else {
+							$(this).css("transform", "translate(" + (277+counter*30) + "px, " + (205-index*30) + "px)");
+						}
+						$(this).css("z-index", "2");
+						$(this).addClass("played");
+						$(this).addClass("animate");
+						counter += 1;
+					}
+				});
+			}
+			$(element).each(function(index) {
+				if (!$(this).hasClass("played")) {
+					if (data.direction == "bottom" || data.direction == "top") {
+						if ($(this).position().left != start) {
+							$(this).animate({"left": start}, 500);
+						}
+					} else {
+						if ($(this).position().top != start) {
+							$(this).animate({"top": start}, 500);
+						}
+					}
+					start += 30;
+				}
+			});
+		});
+		socket.on("animate_discard", function(data) {
+			$(".prev").each(function(index) {
+				$(this).css("z-index", 1);
+				if (data.discarded + index < 26) {
+					$(this).animate({"top": "170px", "left": (50+(data.discarded+index)*20) + "px", "width": "70px"});
+				} else {
+					$(this).animate({"top": "210px", "left": (50+(data.discarded+index-26)*20) + "px", "width": "70px"});						
+				}
+			});
+		});
+		socket.on("cards_played", function(data) {
+			$(".played").remove(); // to clear the cards that were animated using .played
+			$("#played").empty();  // to clear the cards played in previous turn
+			for (var i = 0; i < data.played.length; i++) {
+				$("#played").append('<img src="static/img/' + data.played[i] + '.png" alt="img of a card" class="prev img-rounded" style="top: 15px; left:' + (i*30+133) + 'px;">');
+			}
+		});
+		socket.on("cards_discarded", function(data) {
+			$("#discard_pile").empty(); // to clear the previous discard pile
+			$("#played").empty();		 // to clear the cards in played pile when game ends
+			for (var i = 0; i < data.discarded.length; i++) {
+				if (i < 26) {
+					$("#discard_pile").append('<img src="static/img/' + data.discarded[i] + '.png" alt="img of a card" class="discarded img-rounded" style="left: ' + (50+i*20) + 'px;">');
+				} else {
+					$("#discard_pile").append('<img src="static/img/' + data.discarded[i] + '.png" alt="img of a card" class="discarded img-rounded" style="top: 40px; left: ' + (50+(i-26)*20) + 'px;">');
+
+				}
+			}
+			attach_zoom();
+		});
+		socket.on("new_round", function(data) {
+			current_turn = data.player;
+			$("#played").empty();	// to clear the cards played in previous round
+			$("#wrong_msg").empty();
+			if (data.win) {
+				$("#game_msg").html("<h1 class='text-center'>" + data.player + " won the round. " + data.player + " may play any combination.</h1>");
+			} else {
+				$("#game_msg").html("<h1 class='text-center'>Nobody was able to beat the previous combination. " + data.player + " will start new round.</h1>");				
+			}
+		});
+		socket.on("end", function(data) {
+			$("#game_msg").html('<h1 class="winners">1st place: ' + data.winners[0] + '</h1><h1 class="winners">2nd place: ' + data.winners[1] + '</h1><h1 class="winners">3rd place: ' + data.winners[2] + '</h1><h1 class="winners">4th place: ' + data.winners[0] + '</h1>');
+			$("#ready").removeClass("hide");
+			$("#play").addClass("hide");
+			$("#pass").addClass("hide");
+			$(".cards").remove();
+			$(".played").remove();
+			$("#right_hand").empty();
+			$("#top_hand").empty();
+			$("#left_hand").empty();
+			attach_deck();
 		});
 		socket.on("wrong_cards", function(data) {
 			$("#wrong_msg").html(data.response);
@@ -68,23 +249,25 @@
 		});
 	});
 </script>
-<div class="row">
-	<h1 class="text-center">Game of 13</h1>
-	<div class="col-md-12" id="turn_alert"></div>
-	<div class="col-md-5 col-md-offset-3" id="played">
+<div id="container">
+	<div id="top_hand"></div>
+	<div id="mid_container">
+		<div id="left_hand"></div>
+		<div id="center">
+			<div id="game_msg"></div>
+			<div id="played"></div>
+			<div id="discard_pile"></div>
+		</div>
+		<div id="right_hand"></div>
 	</div>
-</div>
-<div class="row">
-	<div class="col-md-5 col-md-offset-3" id="my_hand">
+	<div id="bot_container">
+		<div id="my_hand">
+			<button class="pull-right btn btn-primary" id="ready">Ready</button>
+			<button class="pull-right btn btn-primary hide" id="pass">Pass</button>
+			<button class="pull-right btn btn-primary hide" id="play">Play</button>
+		</div>		
+		<div id="player"></div>
+		<div id="wrong_msg"></div>
+		<div id="msg_block"></div>	
 	</div>
-	<button id="play">Play</button>
-	<button id="pass">Pass</button>
-</div>
-<div class="row">
-	<div class="col-ms-6 col-md-offset-3" id="player">
-	</div>
-	<div class="col-ms-6 col-md-offset-3" id="wrong_msg">
-	</div>
-	<div class="col-md-6 col-md-offset-3" id="msg_block">
-	</div>	
 </div>

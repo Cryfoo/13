@@ -1,17 +1,96 @@
-.played {
-	width: 20%;
-	position: absolute;
+/*#container {
+	background-color: black;
+}*/
+
+#top_hand, #my_hand, #left_hand, #right_hand {
+	border-radius: 25px;
+	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+	position: relative;
+	padding: 0px 15px;
 }
 
-.cards {
-	width: 20%;
-	position: absolute;
-	top: 0px;
+#top_hand, #played, #my_hand, #msg_block {
+	width: 675px;
+	height: 170px;
 }
 
-.selected {
-	top: -10px !important;
+#top_hand, #my_hand, #player, #wrong_msg, #msg_block {
+	margin-left: 337px;
 }
+
+#top_hand {
+	margin-top: 20px;
+}
+
+#mid_container {
+	width: 1150px;
+	margin-left: 99.5px;
+}
+	#left_hand, #right_hand {
+		width: 230px;
+		height: 490px;
+		display: inline-block;
+	}
+	#center {
+		width: 675px;
+		padding: 0px;
+		vertical-align: top;
+		display: inline-block;
+	}
+		#game_msg {
+			height: 180px;
+			padding: 0px 15px;
+			overflow: hidden;
+		}
+			.winners {
+				margin: 0px;
+			}
+			.winners:first-child {
+				margin-top: 10px;
+			}
+		#played {
+			padding: 0px 15px;
+			position: relative;
+		}
+		#discard_pile {
+			height: 140px;
+			position: relative;
+		}
+
+.prev, .played, .cards, .top, .left, .right, .deck_t, .deck_l, .deck_r, .deck_b {
+	width: 100px;
+	position: absolute;
+}
+	.top {
+		bottom: 12px;
+		transform: rotate(180deg);
+	}
+	.left {
+		right: 40px;
+		transform: rotate(90deg);
+	}
+	.right {
+		left: 40px;
+		transform: rotate(-90deg);
+	}
+	.discarded {
+		width: 70px;
+		position: absolute;
+	}
+	.cards {
+		top: 10px;
+	}
+	.selected {
+		top: 0px !important;
+	}
+	.animate {
+		transform: rotate(0deg);
+		transition: transform 1s;
+	}
+
+#player, #wrong_msg {
+	width: 675px;
+} 
 
 #msg_block {
 	margin-top: 20px;
@@ -19,7 +98,6 @@
 	height: 100px;
 	overflow-y: auto;
 }
-
-.message {
-	margin: 0px;
-}
+	.message {
+		margin: 0px;
+	}
