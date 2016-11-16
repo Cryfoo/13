@@ -1,4 +1,6 @@
 <script type="text/javascript" src="/socket.io/socket.io.js"></script>
+<link rel="stylesheet" href="FlipClock/compiled/flipclock.css">
+<script type="text/javascript" src="FlipClock/compiled/flipclock.min.js"></script>
 <script type="text/javascript">
 	function attach_deck() {
 		var margin = ($("#played").innerWidth()-100) / 2;
@@ -29,6 +31,7 @@
 		var socket = io.connect();
 		var player;
 		var current_turn;
+		var stop_timer;
 		attach_deck();
 
 		$("#ready").click(function() {
@@ -47,6 +50,7 @@
 		});
 		$("#pass").click(function() {
 			if (current_turn == player) {
+				stop_timer = true;
 				socket.emit("pass_turn");
 			} else {
 				$("#wrong_msg").html("It's not your turn!");
@@ -116,6 +120,30 @@
 		socket.on("current_turn", function(data) {
 			current_turn = data.player;
 			$("#game_msg").html("<h1 class='text-center'>" + data.player + "'s turn!</h1>");
+			$("#game_msg").append("<div class='center-block' id='turn_timer'></div>");
+			var callback = {};
+			if (current_turn == player) {
+				stop_timer = false;
+				callback = {
+					interval: function() {
+						var time = this.factory.getTime().time;
+						if (time == 0 && !stop_timer) {
+							socket.emit("pass_turn");
+						} else if (stop_timer) {
+							this.factory.timer._destroyTimer();
+						}
+					}
+				}
+			}
+			var timer = new FlipClock($("#turn_timer"), 15, {
+				clockFace: "Counter",
+				autoStart: true,
+				countdown: true,
+				callbacks: callback
+			});
+		});
+		socket.on("stop_timer", function() {
+			stop_timer = true;
 		});
 		socket.on("player_hand", function(data) {
 			$("#played").empty(); // to clear the cards used to animate dealing out
@@ -212,7 +240,6 @@
 					$("#discard_pile").append('<img src="static/img/' + data.discarded[i] + '.png" alt="img of a card" class="discarded img-rounded" style="left: ' + (50+i*20) + 'px;">');
 				} else {
 					$("#discard_pile").append('<img src="static/img/' + data.discarded[i] + '.png" alt="img of a card" class="discarded img-rounded" style="top: 40px; left: ' + (50+(i-26)*20) + 'px;">');
-
 				}
 			}
 			attach_zoom();
@@ -221,10 +248,12 @@
 			current_turn = data.player;
 			$("#played").empty();	// to clear the cards played in previous round
 			$("#wrong_msg").empty();
-			if (data.win) {
+			if (data.msg == 1) {
 				$("#game_msg").html("<h1 class='text-center'>" + data.player + " won the round. " + data.player + " may play any combination.</h1>");
-			} else {
+			} else if (data.msg == 2) {
 				$("#game_msg").html("<h1 class='text-center'>Nobody was able to beat the previous combination. " + data.player + " will start new round.</h1>");				
+			} else {
+				$("#game_msg").html("<h1 class='text-center'>Everybody passed. " + data.player + " will start round again.</h1>");								
 			}
 		});
 		socket.on("end", function(data) {
@@ -232,11 +261,7 @@
 			$("#ready").removeClass("hide");
 			$("#play").addClass("hide");
 			$("#pass").addClass("hide");
-			$(".cards").remove();
 			$(".played").remove();
-			$("#right_hand").empty();
-			$("#top_hand").empty();
-			$("#left_hand").empty();
 			attach_deck();
 		});
 		socket.on("wrong_cards", function(data) {

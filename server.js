@@ -27,6 +27,7 @@ var turn = 0;		// indicator for current player's turn
 
 // various flags for special cases
 var prev_comb_player_won = ["player_name", false];
+var passed_on_new_round = ["player_name", false];
 var prev_player_passes = false; 	
 var one_more_turn = false;
 var first_turn = true;
@@ -95,7 +96,7 @@ io.sockets.on("connection", function (socket) {
 		first_turn = true;
 		ready.splice(0, ready.length);
 		round.splice(0, round.length);
-		prev_comb.splice(0, prev_comb.length);
+		prev_comb = [[], ""];
 		discarded.splice(0, discarded.length);
 		winners.splice(0, winners.length);
 		p1_hand.splice(0, p1_hand.length);
@@ -212,7 +213,7 @@ io.sockets.on("connection", function (socket) {
 			}
 			// check if current combination beats previous combination
 			if (type != "none") {
-				if (prev_comb.length == 0) {
+				if (prev_comb[0].length == 0) {
 					if (first_turn && data.selected[0] != "01A") {
 						wrong_msg("You must include spades of 3 on first turn.");
 					} else {
@@ -290,8 +291,12 @@ io.sockets.on("connection", function (socket) {
 		}
 	});
 	function next_turn(data, type) {
+		socket.emit("stop_timer");
 		if (prev_comb_player_won[1]) {
 			prev_comb_player_won = ["player_name", false];
+		}
+		if (passed_on_new_round[1]) {
+			passed_on_new_round = ["player_name", false];
 		}
 		var delay = 1500;
 		var prev_discarded_length = discarded.length;
@@ -358,15 +363,15 @@ io.sockets.on("connection", function (socket) {
 				io.emit("cards_discarded", {discarded: discarded});
 				io.emit("cards_played", {played: data.selected});
 				if (round.length == 0) {
-					end_of_round(false);
+					end_of_round(2);
 				} else if (round.length == 1 && prev_player_passes) {
-					end_of_round(true);
+					end_of_round(1);
 					prev_player_passes = false;
 				} else if (round.length == 1 && prev_comb_player_won[1]) {
 					io.emit("current_turn", {player: round[turn]});
 					one_more_turn = true;
 				} else if (round.length == 1 && one_more_turn) {
-					end_of_round(true);
+					end_of_round(1);
 					one_more_turn = false;
 				} else {
 					io.emit("current_turn", {player: round[turn]});
@@ -381,17 +386,23 @@ io.sockets.on("connection", function (socket) {
 	socket.on("pass_turn", function() {
 		console.log("Current turn: " + round[turn]);
 		if (socket.id == round[turn]) {
+			first_turn = false;
+			if (prev_comb[0].length == 0 && !passed_on_new_round[1]) {
+				passed_on_new_round = [socket.id, true];
+			}
 			var index = round.indexOf(socket.id);
 			round.splice(index, 1);
 			if (turn == round.length) {
 				turn = 0;
 			}
-			if (round.length == 0) {
-				end_of_round(false);
+			if (round.length == 0 && prev_comb[0].length == 0) {
+				end_of_round(3);
+			} else if (round.length == 0) {
+				end_of_round(2);
 				one_more_turn = false;
-			} else if (round.length == 1 && !prev_comb_player_won[1]) {
-				end_of_round(true);
-			} else { // pass to next player
+			} else if (round.length == 1 && !prev_comb_player_won[1] && prev_comb[0].length != 0) {
+				end_of_round(1);
+			} else {
 				io.emit("current_turn", {player: round[turn]});
 				if (round.length == 1 && prev_comb_player_won[1]) {
 					prev_player_passes = true;
@@ -399,7 +410,7 @@ io.sockets.on("connection", function (socket) {
 			}
 		}
 	});
-	function end_of_round(roundWin) {
+	function end_of_round(msg) {
 		console.log("End of round");
 		var player = round[0];
 		round.pop();
@@ -419,6 +430,9 @@ io.sockets.on("connection", function (socket) {
 			} while (round.indexOf(player) == -1);
 			turn = round.indexOf(player);
 			prev_comb_player_won = ["player_name", false];
+		} else if (msg == 3) {
+			turn = round.indexOf(passed_on_new_round[0]);
+			passed_on_new_round = ["player_name", false];
 		} else {
 			turn = round.indexOf(player);
 		}
@@ -426,11 +440,11 @@ io.sockets.on("connection", function (socket) {
 		for (var i = 0; i < prev_comb[0].length; i++) {
 			discarded.push(prev_comb[0][i]);
 		}
-		prev_comb.splice(0, prev_comb.length);
+		prev_comb = [[], ""];
 		io.emit("animate_discard", {discarded: prev_discarded_length});
 		setTimeout(function() {
 			io.emit("cards_discarded", {discarded: discarded});
-			io.emit("new_round", {player: round[turn], win: roundWin});
+			io.emit("new_round", {player: round[turn], msg: msg});
 		}, 800);
 	}
 });
