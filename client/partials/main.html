@@ -1,0 +1,79 @@
+<nav class="navbar navbar-inverse navbar-fixed-top">
+	<div class="container-fluid">
+		<div class="navbar-header">
+			<img src="static/img/spades.png" id="logo" alt="spades">
+		</div>
+		<ul class="nav navbar-nav navbar-right">
+			<li id="logout" hidden><a href="#/" ng-click="logout()"><span class="glyphicon glyphicon-log-out"></span> Logout</a></li>
+		</ul>
+	</div>
+</nav>
+<div class="body">
+	<div class="col-md-3" id="user">
+		<img id="picture" class="center-block img-rounded" ng-src="{{user.profilePath}}">
+		<h3 class="text-center">{{user.original}}</h3>
+		<h3 class="text-center">{{user.score}}</h3>
+		<form id="changeProfile" class="text-center" enctype="multipart/form-data" ng-submit="changeProfile()"> 
+			<input type="file" id="profile" accept="image/*">
+			<div class="col-md-8 col-md-offset-2 alert alert-danger" role="alert" ng-if="fileError">
+				<span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+				{{fileError}}
+			</div>
+			<button type="submit" class="btn btn-success">Change Profile</button>
+		</form>
+		<p style="margin-top: 140px;">Created and Developed by: Jae Hoon Kim</p>
+	</div>
+
+	<div class="col-md-6">
+		<h1 class="text-center">Welcome {{user.original}}</h1>
+		<button type="button" class="btn btn-primary col-md-12" ng-click="open()">Create a New Room</button>
+		<!-- Modal -->
+		<div class="newRoom">
+			<script type="text/ng-template" id="newRoom.html">
+				<div class="modal-header">
+					<h3 class="modal-title" id="modal-title" style="color: black">Create a New Room</h3>
+				</div>
+				<div class="modal-body form-horizontal" id="modal-body">
+					<div class="form-group">
+						<label for="roomname" class="col-md-3 control-label" style="color: black">Room Name</label>
+						<div class="col-md-8">
+							<input type="text" class=" form-control" id="roomname" placeholder="Room Name" ng-model="$roomCtrl.roomname" style="color: black">
+						</div>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button class="btn btn-primary" type="button" ng-click="$roomCtrl.create()">Create</button>
+					<button class="btn btn-warning" type="button" ng-click="$roomCtrl.cancel()">Cancel</button>
+				</div>
+			</script>
+		</div>
+		<!-- End of Modal -->
+
+		<div class="col-md-12" id="roomList">
+			<button class="btn col-md-5" ng-repeat="room in roomList" ng-class="{'col-md-offset-2': $odd, 'btn-success': room.status == 'Waiting', 'btn-danger': room.status.startsWith('Playing'), 'btn-warning': room.status == 'Frozen', 'disabled': room.status.startsWith('Playing') || room.frozenDisabled || (room.status == 'Waiting' && room.players.length == 4)}" ng-click="joinRoom($index)"><p>Room Name: {{room.name}}</p><p>Status: {{room.status}}</p><p>Players: <span>{{room.playersList}} </span></p></button>
+		</div>
+
+		<div class="col-md-12 msgBlock"></div>
+		<form class="input-group" >
+			<input type="text" class="form-control" placeholder="Enter chat" id="chat" ng-model="chat">
+			<span class="input-group-btn">
+				<input class="btn btn-primary" type="submit" value="Send" id="send" ng-click="send()">
+			</span>
+		</form>
+	</div>
+
+	<div class="col-md-3">
+		<h3 class="text-center">Notices</h1>
+		<p>- Refreshing, changing to different webpage, and exiting web-brower will cause the user to logout and be locked out for 5 seconds. Please use the 'Logout' button if possible.</p>
+		<p>- If you leave during the game and do not reconnect, 50 points will be deducted from your score as a penalty.</p>
+		<h3 class="text-center">Users on Main Page</h3>
+		<div id="userList">
+			<h4 ng-repeat="user in users"><span class="glyphicon glyphicon-user"></span> {{user}}</h4>
+		</div>
+	</div>
+</div>
+
+<script>
+	var width = $("body").innerWidth();
+	$("body").css("background-size", width + "px");
+</script>

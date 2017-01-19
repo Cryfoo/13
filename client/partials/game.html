@@ -1,298 +1,156 @@
-<script type="text/javascript" src="/socket.io/socket.io.js"></script>
-<link rel="stylesheet" href="FlipClock/compiled/flipclock.css">
-<script type="text/javascript" src="FlipClock/compiled/flipclock.min.js"></script>
-<script type="text/javascript">
-	function attach_deck() {
-		var margin = ($("#played").innerWidth()-100) / 2;
-		for (var i = 0; i < 6; i++) {
-			$("#played").append('<img src="static/img/card01.jpg" alt="img of a card" class="played img-rounded" style="left: ' + (margin-i*5) + 'px; top: ' + (15-i*5) + 'px;">');
-		}
-	}
-	function attach_animation() {
-		$(".cards").hover(function() {
-			$(this).animate({"top": "0px"}, "fast");
-		}, function() {
-			$(this).animate({"top": "10px"}, "fast");
-		}).click(function() {
-			$(this).toggleClass("selected");
-		});
-	}
-	function attach_zoom() {
-		$(".discarded").hover(function() {
-			$(this).css("z-index", "1");
-			$(this).animate({"width": "150px"}, "fast");
-		}, function() {
-			$(this).css("z-index", 0);
-			$(this).animate({"width": "70px"}, "fast");
-		});
-	}
+<link rel="stylesheet" href="flipclock/compiled/flipclock.css">
+<script type="text/javascript" src="flipclock/compiled/flipclock.min.js"></script>
 
-	$(document).ready(function() {
-		var socket = io.connect();
-		var player;
-		var current_turn;
-		var stop_timer;
-		attach_deck();
-
-		$("#ready").click(function() {
-			socket.emit("ready");
-		});
-		$("#play").click(function() {
-			if (current_turn == player) {
-				var selected = [];
-				$(".selected").each(function(index) {
-					selected.push($(this).attr("src").substring(11, 14));
-				});
-				socket.emit("play", {selected: selected});
-			} else {
-				$("#wrong_msg").html("It's not your turn!");
-			}
-		});
-		$("#pass").click(function() {
-			if (current_turn == player) {
-				stop_timer = true;
-				socket.emit("pass_turn");
-			} else {
-				$("#wrong_msg").html("It's not your turn!");
-			}
-		});
-
-		socket.on("user_connect", function(data) {
-			$("#msg_block").append('<p class="message">' + data.user + ' connected.</p>');
-		});
-		socket.on("user_disconnect", function(data) {
-			$("#msg_block").append('<p class="message">' + data.user + ' disconnected.</p>');
-		});
-		socket.on("ready", function(data) {
-			var playersReady = "";
-			if (data.ready.length == 1) {
-				playersReady = data.ready[0] + " is ready.";
-			} else {
-				for (var i = 0; i < data.ready.length-1; i++) {
-					playersReady += data.ready[i] + ", ";
-				}
-				playersReady += "and " + data.ready[data.ready.length-1] + " are ready.";
-			}
-			$("#game_msg").html("<h1 class='text-center'>" + playersReady + "</h1>");
-		});
-		socket.on("starting_hand", function(data) {
-			$("#played").empty(); // to clear the attach_deck()
-			var margin = ($("#played").innerWidth()-100) / 2;
-			for (var i = 0; i < 13; i++) {			
-				$("#played").append('<img src="static/img/card01.jpg" alt="img of a card" class="deck_t img-rounded" style="top: 15px; left: ' + margin + 'px;">');
-				$("#played").append('<img src="static/img/card01.jpg" alt="img of a card" class="deck_l img-rounded" style="top: 15px; left: ' + margin + 'px;">');
-				$("#played").append('<img src="static/img/card01.jpg" alt="img of a card" class="deck_r img-rounded" style="top: 15px; right: ' + margin + 'px;">');
-				$("#played").append('<img src="static/img/' + data.hand[i] + '.png" alt="img of a card" class="deck_b img-rounded" style="top: 15px; left: ' + margin + 'px;">');
-			}
-		});
-		socket.on("start", function() {
-			$("#ready").addClass("hide");
-			$("#wrong_msg").empty();
-			$("#discard_pile").empty(); // to clear the discard pile from previous game
-			$(".deck_t").each(function (index) {
-				$(this).animate({"font-size": "180px", "top": "-338.21px", "left": (index*30+33) + "px"}, {
-					duration: 500,
-					step: function(now, fx) {
-						$(this).css("transform", "rotate(" + now + "deg)");
-					}
-				});
-			});
-			$(".deck_l").each(function (index) {
-				$(this).animate({"font-size": "90px", "top": ((index*30)-190) + "px", "left": "-144px"}, {
-					duration: 500,
-					step: function(now, fx) {
-						$(this).css("transform", "rotate(" + now + "deg)");
-					}
-				});
-			});
-			$(".deck_r").each(function (index) {
-				$(this).animate({"font-size": "-90px", "top": ((index*30)-190) + "px", "right": "-144px"}, {
-					duration: 500,
-					step: function(now, fx) {
-						$(this).css("transform", "rotate(" + now + "deg)");
-					}
-				});
-			});
-			$(".deck_b").each(function (index) {
-				$(this).animate({"top": "325px", "left": (index*30+33) + "px"}, 500);
-			});
-		});
-		socket.on("current_turn", function(data) {
-			current_turn = data.player;
-			$("#game_msg").html("<h1 class='text-center'>" + data.player + "'s turn!</h1>");
-			$("#game_msg").append("<div class='center-block' id='turn_timer'></div>");
-			var callback = {};
-			if (current_turn == player) {
-				stop_timer = false;
-				callback = {
-					interval: function() {
-						var time = this.factory.getTime().time;
-						if (time == 0 && !stop_timer) {
-							socket.emit("pass_turn");
-						} else if (stop_timer) {
-							this.factory.timer._destroyTimer();
-						}
-					}
-				}
-			}
-			var timer = new FlipClock($("#turn_timer"), 15, {
-				clockFace: "Counter",
-				autoStart: true,
-				countdown: true,
-				callbacks: callback
-			});
-		});
-		socket.on("stop_timer", function() {
-			stop_timer = true;
-		});
-		socket.on("player_hand", function(data) {
-			$("#played").empty(); // to clear the cards used to animate dealing out
-			$("#play").removeClass("hide");
-			$("#pass").removeClass("hide");
-			$("#top_hand").empty();
-			for(var i = 0; i < data.hand[2]; i++) {
-				$("#top_hand").append('<img src="static/img/card01.jpg" alt="img of a card" class="top img-rounded" style="left: ' + ((i+1)*30) + 'px;">');
-			}
-			$("#left_hand").empty();
-			for(var i = 0; i < data.hand[3]; i++) {
-				$("#left_hand").append('<img src="static/img/card01.jpg" alt="img of a card" class="left img-rounded" style="top: ' + ((i*30)-10) + 'px;">');
-			}
-			$("#right_hand").empty();
-			for(var i = 0; i < data.hand[1]; i++) {
-				$("#right_hand").append('<img src="static/img/card01.jpg" alt="img of a card" class="right img-rounded" style="top: ' + ((i*30)-10) + 'px;">');
-			}
-			$(".cards").remove();
-			for (var i = 0; i < data.hand[0].length; i++) {
-				$("#my_hand").append('<img src="static/img/' + data.hand[0][i] + '.png" alt="img of a card" class="cards img-rounded" style="left:' + ((i+1)*30) + 'px;">');
-			}
-			attach_animation();
-		});
-		socket.on("animate_cards", function(data) {
-			var element = "." + data.direction;
-			var start = 30;
-			if (data.direction == "bottom") {
-				$(".selected").each(function(index) {
-					$(this).removeClass("selected");
-					$(this).unbind("mouseenter mouseleave");
-					$(this).addClass("played");
-					$(this).css("z-index", "2");
-					$(this).animate({"top": "-300px", "left": (index*30+130) + "px"}, 500);
-				});
-				element = ".cards";
-			} else {
-				if (data.direction != "top") {
-					start = -10;
-				}
-				var counter = 0;
-				$(element).each(function(index) {
-					if (index == data.indices[counter]) {
-						if (data.direction == "right") {
-							$(this).css("transform", "translate(-" + (586-counter*30) + "px, " + (205-index*30) + "px)");
-						} else if (data.direction == "top") {
-							$(this).css("transform", "translate(" + (100+(counter-index)*30) + "px, 353px)");
-						} else {
-							$(this).css("transform", "translate(" + (277+counter*30) + "px, " + (205-index*30) + "px)");
-						}
-						$(this).css("z-index", "2");
-						$(this).addClass("played");
-						$(this).addClass("animate");
-						counter += 1;
-					}
-				});
-			}
-			$(element).each(function(index) {
-				if (!$(this).hasClass("played")) {
-					if (data.direction == "bottom" || data.direction == "top") {
-						if ($(this).position().left != start) {
-							$(this).animate({"left": start}, 500);
-						}
-					} else {
-						if ($(this).position().top != start) {
-							$(this).animate({"top": start}, 500);
-						}
-					}
-					start += 30;
-				}
-			});
-		});
-		socket.on("animate_discard", function(data) {
-			$(".prev").each(function(index) {
-				$(this).css("z-index", 1);
-				if (data.discarded + index < 26) {
-					$(this).animate({"top": "170px", "left": (50+(data.discarded+index)*20) + "px", "width": "70px"});
-				} else {
-					$(this).animate({"top": "210px", "left": (50+(data.discarded+index-26)*20) + "px", "width": "70px"});						
-				}
-			});
-		});
-		socket.on("cards_played", function(data) {
-			$(".played").remove(); // to clear the cards that were animated using .played
-			$("#played").empty();  // to clear the cards played in previous turn
-			for (var i = 0; i < data.played.length; i++) {
-				$("#played").append('<img src="static/img/' + data.played[i] + '.png" alt="img of a card" class="prev img-rounded" style="top: 15px; left:' + (i*30+133) + 'px;">');
-			}
-		});
-		socket.on("cards_discarded", function(data) {
-			$("#discard_pile").empty(); // to clear the previous discard pile
-			$("#played").empty();		 // to clear the cards in played pile when game ends
-			for (var i = 0; i < data.discarded.length; i++) {
-				if (i < 26) {
-					$("#discard_pile").append('<img src="static/img/' + data.discarded[i] + '.png" alt="img of a card" class="discarded img-rounded" style="left: ' + (50+i*20) + 'px;">');
-				} else {
-					$("#discard_pile").append('<img src="static/img/' + data.discarded[i] + '.png" alt="img of a card" class="discarded img-rounded" style="top: 40px; left: ' + (50+(i-26)*20) + 'px;">');
-				}
-			}
-			attach_zoom();
-		});
-		socket.on("new_round", function(data) {
-			current_turn = data.player;
-			$("#played").empty();	// to clear the cards played in previous round
-			$("#wrong_msg").empty();
-			if (data.msg == 1) {
-				$("#game_msg").html("<h1 class='text-center'>" + data.player + " won the round. " + data.player + " may play any combination.</h1>");
-			} else if (data.msg == 2) {
-				$("#game_msg").html("<h1 class='text-center'>Nobody was able to beat the previous combination. " + data.player + " will start new round.</h1>");				
-			} else {
-				$("#game_msg").html("<h1 class='text-center'>Everybody passed. " + data.player + " will start round again.</h1>");								
-			}
-		});
-		socket.on("end", function(data) {
-			$("#game_msg").html('<h1 class="winners">1st place: ' + data.winners[0] + '</h1><h1 class="winners">2nd place: ' + data.winners[1] + '</h1><h1 class="winners">3rd place: ' + data.winners[2] + '</h1><h1 class="winners">4th place: ' + data.winners[0] + '</h1>');
-			$("#ready").removeClass("hide");
-			$("#play").addClass("hide");
-			$("#pass").addClass("hide");
-			$(".played").remove();
-			attach_deck();
-		});
-		socket.on("wrong_cards", function(data) {
-			$("#wrong_msg").html(data.response);
-		});
-
-		socket.on("current_player", function(data) {
-			player = data.user;
-			$("#player").html("player: " + data.user);
-		});
-	});
-</script>
 <div id="container">
-	<div id="top_hand"></div>
-	<div id="mid_container">
-		<div id="left_hand"></div>
-		<div id="center">
-			<div id="game_msg"></div>
-			<div id="played"></div>
-			<div id="discard_pile"></div>
+	<div id="top_container">
+		<div class="player" id="top_player">
+			<player player="topPlayer" ng-if="topPlayer.profilePath"></player>
+			<div id="arrow_right"></div>
 		</div>
-		<div id="right_hand"></div>
+		<div id="top_hand">
+			<img ng-repeat="card in topHand track by $index" class="cardsTop img-rounded" ng-src="{{card}}" ng-style="topStyle[$index]">
+		</div>
+		<div class="player" id="right_player">
+			<player player="rightPlayer" ng-if="rightPlayer.profilePath"></player>
+			<div id="arrow_down"></div>
+		</div>
 	</div>
+
+	<div id="mid_container">
+		<div id="left_hand">
+			<img ng-repeat="card in leftHand track by $index" class="cardsLeft img-rounded" ng-src="{{card}}" ng-style="leftStyle[$index]">
+		</div>
+		<div id="center">
+			<div id="gameMsgContainer">
+				<h1 class="gameMsg text-center">{{msg}}</h1>
+				<h1 class="winners" ng-repeat="winner in winners">{{winner}}</h1>
+				<div class="center-block" id="turnTimer"></div>
+			</div>
+			<div id="played">
+				<deck ng-if="!gameStart"></deck>
+				<img ng-repeat="card in startingHand track by $index" class="startingHand img-rounded" ng-src="{{card}}" ng-style="translate[$index]">
+				<img ng-repeat="card in cardsPlayed" class="played img-rounded" ng-src="{{card}}" ng-style="translate[$index]">				
+			</div>
+			<div id="discard_pile">
+				<img ng-repeat="card in cardsDiscarded" class="discarded img-rounded" ng-src="{{card}}" ng-style="translate2[$index]">
+			</div>
+		</div>
+		<div id="right_hand">
+			<img ng-repeat="card in rightHand track by $index" class="cardsRight img-rounded" ng-src="{{card}}" ng-style="rightStyle[$index]">
+		</div>
+	</div>
+
 	<div id="bot_container">
-		<div id="my_hand">
-			<button class="pull-right btn btn-primary" id="ready">Ready</button>
-			<button class="pull-right btn btn-primary hide" id="pass">Pass</button>
-			<button class="pull-right btn btn-primary hide" id="play">Play</button>
-		</div>		
-		<div id="player"></div>
-		<div id="wrong_msg"></div>
-		<div id="msg_block"></div>	
+		<div>
+			<div class="player" id="left_player">
+				<player player="leftPlayer" ng-if="leftPlayer.profilePath"></player>
+				<div id="arrow_up"></div>
+			</div>
+			<div id="my_hand">
+				<button class="pull-right btn btn-primary" ng-if="!gameStart" ng-click="ready()">Ready</button>
+				<button class="pull-right btn btn-primary" ng-if="aiButton && !gameStart" ng-click="ai()">vs A.I.</button>
+				<button class="pull-right btn btn-primary" ng-if="gameStart" ng-click="pass()">Pass</button>
+				<button class="pull-right btn btn-primary" ng-if="gameStart" ng-click="play()">Play</button>
+				<button class="btn btn-primary" id="cardbackBtn" ng-if="!gameStart" ng-click="open()">Change Cardback</button>
+				<img ng-repeat="card in bottomHand" class="cardsBottom img-rounded" ng-src="static/img/{{card}}.png" ng-style="bottomStyle[$index]" ng-class="{'cardsBottom': !clicked, 'selected': clicked}" ng-click="clicked = !clicked">
+			</div>
+			<div id="btn_block">
+				<button class="btn btn-primary" uib-popover-template="rules.templateUrl" popover-title="13 Rules" popover-trigger="'outsideClick : outsideClick'" popover-placement="left" id="rules">Game Rules</button>
+				<a href="#/main" class="btn btn-primary" role="button" id="leave" ng-if="!gameStart" ng-click="leave()">Leave</a>
+			</div>
+			<div class="player" id="bottom_player">
+				<player player="user" ng-if="user.profilePath"></player>
+				<div id="arrow_left"></div>
+			</div>
+		</div>
+		<div class="alert alert-danger alert-dismissible" role="alert" id="alert_block" ng-if="alertMsg">
+			<button type="button" class="close" data-dismiss="alert" aria-label="Close" ng-click="clearAlert()"><span aria-hidden="true">&times;</span></button>
+			<span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+			<span>{{alertMsg}}</span>
+		</div>
+		<div class="msgBlock" id="msgBlock2"></div>
+		<form class="input-group" id="chatInput">
+			<input type="text" class="form-control" placeholder="Enter chat" id="chat" ng-model="chat">
+			<span class="input-group-btn">
+				<input class="btn btn-primary" type="submit" value="Send" id="send" ng-click="send()">
+			</span>
+		</form>
+
+		<span style="margin-left: 10px;">Created and Developed by: Jae Hoon Kim</span>
 	</div>
+	<!-- Modal -->
+	<div class="cardbackModal">
+		<script type="text/ng-template" id="cardback.html">
+			<div class="modal-header">
+				<h3 class="modal-title" id="modal-title" style="color: black">Choose a Cardback</h3>
+			</div>
+			<div class="modal-body" id="modal-body">
+				<label class="cbLabel">
+					<input type="radio" ng-model="$cbCtrl.cardback" value="card01.jpg">
+					<img src="static/img/card01.jpg">
+				</label>
+				<label class="cbLabel">
+					<input type="radio" ng-model="$cbCtrl.cardback" value="card02.jpg">
+					<img src="static/img/card02.jpg">
+				</label>
+				<label class="cbLabel">
+					<input type="radio" ng-model="$cbCtrl.cardback" value="card03.jpg">
+					<img src="static/img/card03.jpg">
+				</label>
+				<label class="cbLabel">
+					<input type="radio" ng-model="$cbCtrl.cardback" value="card04.jpg">
+					<img src="static/img/card04.jpg">
+				</label>
+				<label class="cbLabel">
+					<input type="radio" ng-model="$cbCtrl.cardback" value="card05.jpg">
+					<img src="static/img/card05.jpg">
+				</label>
+				<label class="cbLabel">
+					<input type="radio" ng-model="$cbCtrl.cardback" value="card06.jpg">
+					<img src="static/img/card06.jpg">
+				</label>
+				<label class="cbLabel">
+					<input type="radio" ng-model="$cbCtrl.cardback" value="card07.jpg">
+					<img src="static/img/card07.jpg">
+				</label>
+				<label class="cbLabel">
+					<input type="radio" ng-model="$cbCtrl.cardback" value="card08.jpg">
+					<img src="static/img/card08.jpg">
+				</label>
+				<label class="cbLabel">
+					<input type="radio" ng-model="$cbCtrl.cardback" value="card09.jpg">
+					<img src="static/img/card09.jpg">
+				</label>
+				<label class="cbLabel">
+					<input type="radio" ng-model="$cbCtrl.cardback" value="card10.jpg">
+					<img src="static/img/card10.jpg">
+				</label>
+				</label>
+				<label class="cbLabel">
+					<input type="radio" ng-model="$cbCtrl.cardback" value="card11.jpg">
+					<img src="static/img/card11.jpg">
+				</label>
+				<label class="cbLabel">
+					<input type="radio" ng-model="$cbCtrl.cardback" value="card12.jpg">
+					<img src="static/img/card12.jpg">
+				</label>
+				<label class="cbLabel">
+					<input type="radio" ng-model="$cbCtrl.cardback" value="card13.jpg">
+					<img src="static/img/card13.jpg">
+				</label>
+				<label class="cbLabel">
+					<input type="radio" ng-model="$cbCtrl.cardback" value="Horde.jpg">
+					<img src="static/img/Horde.jpg">
+				</label>
+				<label class="cbLabel">
+					<input type="radio" ng-model="$cbCtrl.cardback" value="Alliance.jpg">
+					<img src="static/img/Alliance.jpg">
+			</div>
+			<div class="modal-footer">
+				<button class="btn btn-primary" type="button" ng-click="$cbCtrl.change()">Change</button>
+				<button class="btn btn-warning" type="button" ng-click="$cbCtrl.cancel()">Cancel</button>
+			</div>
+		</script>
+	</div>
+	<!-- End of Modal -->
 </div>

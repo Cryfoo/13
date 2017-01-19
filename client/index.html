@@ -1,18 +1,26 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" ng-app="app">
 <head>
 	<title>13</title>
-	<script src="jquery/dist/jquery.min.js "></script>
+	<script src="jquery/dist/jquery.min.js"></script>
+	<script src="static/script/timer.js"></script>
 	<script src="angular/angular.js"></script>
 	<script src="angular-route/angular-route.js"></script>
+	<script src="angular-bootstrap/ui-bootstrap.min.js"></script>
+	<script src="angular-bootstrap/ui-bootstrap-tpls.min.js"></script>
+	<script src="/socket.io/socket.io.js"></script>
+	<script src="ngstorage/ngStorage.min.js"></script>
 	<script src="assets/app.js"></script>
+	<script src="assets/factories/socket.js"></script>
+	<script src="assets/factories/usersFactory.js"></script>
+	<script src="assets/controllers/usersController.js"></script>
 	<script src="assets/factories/gamesFactory.js"></script>
-	<script src="assets/controllers/GameController.js"></script>
+	<script src="assets/controllers/gamesController.js"></script>
+	<script src="assets/controllers/mainController.js"></script>
 	<link rel="stylesheet" type="text/css" href="bootstrap/dist/css/bootstrap.min.css">
 	<link rel="stylesheet" type="text/css" href="static/CSS/style.css">
 </head>
-<body ng-app="app">
-	<div ng-view>
-	</div>
+<body>
+	<div ng-view></div>
 </body>
 </html>

@@ -13,4 +13,4 @@ fs.readdirSync(models_path).forEach(function(file) {
 	if (reg.test(file)) {
 		require(path.join(models_path, file));
 	}
-})
+});

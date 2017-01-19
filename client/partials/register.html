@@ -1,0 +1,61 @@
+<nav class="navbar navbar-inverse navbar-fixed-top">
+	<div class="container-fluid">
+		<div class="navbar-header">
+			<img src="static/img/spades.png" id="logo" alt="spades">
+		</div>
+		<ul class="nav navbar-nav navbar-right">
+			<li id="login"><a href="#/"><span class="glyphicon glyphicon-log-in"></span> Login</a></li>
+			<li class="active" id="register"><a href="#/register"><span class="glyphicon glyphicon-plus"></span> Register</a></li>
+		</ul>
+	</div>
+</nav>
+<div class="body">
+	<h1 class="text-center">Welcome to 13!</h1>
+	<form class="col-md-6 col-md-offset-3" enctype="multipart/form-data" ng-submit="register()"> 
+		<div class="form-group">
+			<label for="username">Username</label>
+			<input type="text" class="form-control" id="username" placeholder="Username" ng-model="user.username">
+			<div class="alert alert-danger" role="alert" ng-if="dupError">
+				<span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+				{{ dupError }}
+			</div>
+			<div class="alert alert-danger" role="alert" ng-if="usernameError">
+				<span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+				{{ usernameError }}
+			</div>
+		</div>
+		<div class="form-group">
+			<label for="password">Password</label>
+			<input type="password" class="form-control" id="password" placeholder="Password" ng-model="user.password">
+			<div class="alert alert-danger" role="alert" ng-if="passwordError">
+				<span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+				{{ passwordError }}
+			</div>
+		</div>
+		<div class="form-group">
+			<label for="confirm">Confirm Password</label>
+			<input type="password" class="form-control" id="confirm" placeholder="Confirm Password" ng-model="user.confirm">
+			<div class="alert alert-danger" role="alert" ng-if="confirmError">
+				<span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+				{{ confirmError }}
+			</div>
+		</div>
+		<div class="form-group">
+			<label for="profile">Profile Picture</label>
+			<input type="file" id="profile" accept="image/*">
+			<div class="alert alert-danger" role="alert" ng-if="fileError">
+				<span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+				{{ fileError }}
+			</div>
+		</div>
+		<button type="submit" class="btn btn-success col-md-8 col-md-offset-2" id="registerBtn">Register</button>
+	</form>
+	
+	<p style="position: absolute; bottom: 25px; left: 10px;">Created and Developed by: Jae Hoon Kim</p>
+	<p style="position: absolute; bottom: 5px; left: 10px;">If you find bugs, please email to jaehoonkim0801@gmail.com</p>
+</div>
+
+<script>
+	var width = $("body").innerWidth();
+	$("body").css("background-size", width + "px");
+</script>

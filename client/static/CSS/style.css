@@ -1,24 +1,126 @@
+body {
+	background-image: url("../img/background.jpg");
+	color: lightgrey;
+}
+
+/*css for login.html and register.html*/
+nav {
+	font-size: 17px;
+}
+	#logo {
+		width: 50px;
+	}
+
+.body {
+	padding-top: 70px;
+}
+	label {
+		font-size: 17px;
+	}
+	#registerBtn, #loginBtn {
+		margin-top: 15px;
+	}
+
+/*css for main.html*/
+#picture {
+	width: 240px;
+}
+
+#changeProfile {
+	margin-top: 40px;
+}
+	#changeProfile input {
+		margin: 0px 0px 10px 55px;
+	}
+	#changeProfile div {
+		margin-bottom: 5px;
+		padding: 10px;
+	}
+
+#roomList {
+	height: 400px;
+	margin: 20px 0px;
+	overflow-y: auto;
+}
+	#roomList button {
+		height: 100px;
+		word-wrap: break-word;
+		white-space: normal;
+		margin-bottom: 20px;
+	}
+	#roomList button p {
+		margin: 0px;
+	}
+
+#userList {
+	height: 350px;
+	overflow-y: auto;
+}
+
+/*css for game.html*/
 #container {
 	padding: 20px 0px;
-	background-image: url("../img/background.jpg");
+	background-image: url("../img/game_background.jpg");
 	background-position: -180px -70px;
 }
 
-#top_hand, #my_hand, #left_hand, #right_hand {
+.player {
+	width: 150px;
+	height: 150px;
+	vertical-align: top;
+	display: inline-block;
+}
+	.player img {
+		height: 100px;
+		margin-top: 8px;
+	}
+	.player p {
+		color: white;
+		margin: 0px;
+	}
+
+#top_player {
+	margin-left: 158px;
+}
+	#arrow_right {
+		width: 0px;
+		height: 0px;
+		position: absolute;
+		left: 150px;
+		top: 55px;
+		border-top: 20px solid transparent;
+		border-bottom: 20px solid transparent;
+		border-left: 20px solid rgba(255,255,255,0.2);
+		display: inline-block;
+	}
+
+#top_hand, #my_hand, #left_hand, #right_hand, #top_player, #left_player, #right_player, #bottom_player {
 	border-radius: 25px;
 	box-shadow: 0 4px 8px 5px rgba(255,255,255,0.2), 0 6px 20px 5px rgba(255,255,255,0.19);
 	position: relative;
 	padding: 0px 15px;
 }
+	#top_hand {
+		width: 675px;
+		height: 170px;
+		margin-left: 25px;
+		display: inline-block;
+	}
 
-#top_hand, #played, #my_hand, #msg_block {
-	width: 675px;
-	height: 170px;
+#right_player {
+	margin-left: 70px;
 }
-
-#top_hand, #my_hand, #player, #wrong_msg, #msg_block {
-	margin-left: 337px;
-}
+	#arrow_down {
+		width: 0px;
+		height: 0px;
+		position: absolute;
+		left: 60px;
+		top: 150px;
+		border-left: 20px solid transparent;
+		border-right: 20px solid transparent;
+		border-top: 20px solid rgba(255,255,255,0.2);
+		display: inline-block;
+	}
 
 #mid_container {
 	width: 1150px;
@@ -35,23 +137,28 @@
 		vertical-align: top;
 		display: inline-block;
 	}
-		#game_msg {
+		#gameMsgContainer {
 			color: lightgrey;
 			height: 180px;
 			padding: 0px 15px;
 			overflow: hidden;
 		}
-			#turn_timer {
-				width: 140px;
-				margin: 0px auto;
+			.gameMsg {
+				margin: 10px 0px 0px 0px;
 			}
 			.winners {
-				margin: 0px;
+				margin: 0px 0px 0px 10px;
 			}
 			.winners:first-child {
 				margin-top: 10px;
 			}
+			#turnTimer {
+				width: 140px;
+				margin: 0px auto;
+			}
 		#played {
+			width: 675px;
+			height: 170px;
 			padding: 0px 15px;
 			position: relative;
 		}
@@ -60,54 +167,164 @@
 			position: relative;
 		}
 
-#my_hand button{
-	margin: 10px 5px;
-}
-
-.prev, .played, .cards, .top, .left, .right, .deck_t, .deck_l, .deck_r, .deck_b {
+.startingHand, .cardsBottom, .cardsTop, .cardsRight, .cardsLeft, .played {
 	width: 100px;
 	position: absolute;
 }
-	.top {
-		bottom: 12px;
+	.startingHand {
+		left: 287.5px;
+		top: 15px;
+		transition: all 1s ease;
+	}
+	.cardsBottom {
+		top: 13px;
+		transition: all 200ms ease;
+	}
+		.cardsBottom:hover {
+			transform: translate(0px, -10px);
+			transition: all 200ms ease;
+		}
+		.selected {
+			width: 100px;
+			position: absolute;
+			top: 3px;
+		}
+	.cardsTop {
+		top: 12px;
 		transform: rotate(180deg);
 	}
-	.left {
+	.cardsLeft {
 		right: 40px;
 		transform: rotate(90deg);
 	}
-	.right {
+	.cardsRight {
 		left: 40px;
 		transform: rotate(-90deg);
+	}
+	.played {
+		top: 15px;
 	}
 	.discarded {
 		width: 70px;
 		position: absolute;
 	}
-	.cards {
-		top: 10px;
-	}
-	.selected {
-		top: 0px !important;
-	}
-	.animate {
-		transform: rotate(0deg);
-		transition: transform 1s;
+		.discarded:hover {
+			width: 150px;
+			z-index: 1;
+			transition: all 200ms ease;
+		}
+
+#left_player {
+	margin: 30px 0px 0px 98px;
+}
+	#arrow_up {
+		width: 0px;
+		height: 0px;
+		position: absolute;
+		left: 60px;
+		top: -20px;
+		border-left: 20px solid transparent;
+		border-right: 20px solid transparent;
+		border-bottom: 20px solid rgba(255,255,255,0.2);
+		display: inline-block;
 	}
 
-#player, #wrong_msg {
-	color: lightgrey;
+#my_hand {
 	width: 675px;
+	height: 170px;
+	margin-left: 85px;
+	display: inline-block;
+}
+	#my_hand button {
+		margin: 20px 5px;
+	}
+	#cardbackBtn {
+		position: absolute;
+		bottom: 10px;
+		right: 15px;
+	}
+	#btn_block {
+		display: inline-block;
+		vertical-align: top;
+	}
+		#rules, #leave {
+			margin: 20px 0px 0px 20px;
+		}
+			.popover {
+				max-width: 700px;
+			}
+			.popover-title {
+				color: black;
+				font-size: 24px;
+			}
+			#rules_img {
+				width: 625px;
+				height: 509px;
+			}
+
+#bottom_player {
+	position: absolute;
+	left: 1040px;
+	top: 760px;
+}
+	#arrow_left {
+		width: 0px;
+		height: 0px;
+		position: absolute;
+		left: -20px;
+		top: 30px;
+		border-top: 20px solid transparent;
+		border-bottom: 20px solid transparent;
+		border-right: 20px solid rgba(255,255,255,0.2);
+		display: inline-block;
+	}
+
+#alert_block {
+	width: 675px;
+	margin: 10px 0px 0px 337px;
 } 
 
-#msg_block {
-	color: lightgrey;
-	margin-top: 20px;
-	padding: 5px;
-	outline: 1px solid lightgrey;
+.msgBlock {
 	height: 100px;
+	padding: 5px;
+	border-left: 1px solid lightgrey;
+	border-top: 1px solid lightgrey;
+	border-right: 1px solid lightgrey;
+	border-radius: 4px 4px 0px 0px;
+	background-color: black;
+	color: lightgrey;
 	overflow-y: auto;
 }
+	#msgBlock2 {
+		width: 675px;
+		margin: 10px 0px 0px 337px;
+	}
 	.message {
 		margin: 0px;
+		white-space: initial;
+		overflow: hidden;
+	}
+
+#chatInput {
+	width: 675px;
+	margin-left: 337px;
+}
+	#chat {
+		border-top-left-radius: 0px !important;
+		background-color: black;
+		color: lightgrey;
+	}
+	#send {
+		border-top-right-radius: 0px !important;
+	}
+
+.cbLabel {
+	margin: 0px 5px;	
+}
+	.cbLabel input {
+		display: block;
+		margin: 5px 0px 5px 43.5px !important;
+	}
+	.cbLabel img {
+		width: 100px;
 	}

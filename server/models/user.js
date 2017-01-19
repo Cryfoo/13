@@ -2,45 +2,45 @@ var mongoose = require("mongoose");
 var bcrypt = require("bcryptjs");
 
 var UsersSchema = new mongoose.Schema({
-	email: {
+	username: {
 		type: String,
-		required: true,
 		unique: true,
-		validate: {
-			validator: function(value) {
-				var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-			    return re.test(value);
-			},
-			message: "{VALUE} is not a valid email address!"
-		}
-	},
-	first_name: {
-		type: String,
-		required: true
-	},
-	last_name: {
-		type: String,
-		required: true
+		required: [true, "Username is required."],
+		trim: true
 	},
 	password: {
 		type: String,
-		required: true,
-		minlength: 8,
+		required: [true, "Password is required!"],
+		minlength: [8, "Password must be at least 8 characters long."],
 		validate: {
 			validator: function(value) {
-				return value === this.password_confirm;
+				return value === this.confirm;
 			},
-			message: "Password and confirm password does not match!"
+			message: "Password and confirm password does not match."
 		}
 	},
-	password_confirm: {
+	confirm: {
 		type: String,
-		required: true,
-		minlength: 8
+		required: [true, "Password confirm is required."],
+		minlength: [8, "Password confirm must be 8 characters long."],
 	},
-	birthday: {
-		type: Date,
-		required: true
+	original: {
+		type: String
+	},
+	score: {
+		type: Number
+	},
+	profile: {
+		type: String
+	},
+	cardback: {
+		type: String
+	},
+	loggedIn: {
+		type: Boolean
+	},
+	userLevel: {
+		type: Number
 	}
 }, {timestamps: true});
 
@@ -54,7 +54,14 @@ UsersSchema.methods.checkPW = function(pw) {
 
 UsersSchema.pre("save", function(done) {
 	this.password = this.encryptPW(this.password);
-	this.password_confirm = "";
+	this.original = this.username;
+	this.username = this.username.toLowerCase();
+	this.confirm = undefined;
+	this.score = 0;
+	this.profile = null;
+	this.cardback = "card01.jpg";
+	this.loggedIn = true;
+	this.userLevel = 1;
 	done();
 });
 
