@@ -4,3 +4,6 @@
 /node_modules/*
 /server/logs/*
 /client/static/profile/*
+
+!/server/logs/.gitkeep
+!/client/static/profile/.gitkeep
