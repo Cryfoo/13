@@ -1,6 +1,6 @@
 var app = angular.module("app", ["ngRoute", "ui.bootstrap"]);
 
-app.config(function($routeProvider) {
+app.config(function($routeProvider, $locationProvider) {
 	$routeProvider
 	.when("/", {
 		templateUrl: "partials/login.html",
@@ -21,6 +21,8 @@ app.config(function($routeProvider) {
 	.otherwise({
 		redirectTo: "/"
 	});
+
+	$locationProvider.hashPrefix("");
 });
 
 app.controller("roomModalInstance", function($uibModalInstance, $location, socket, usersFactory) {
