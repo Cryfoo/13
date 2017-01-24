@@ -30,6 +30,7 @@ app.factory("usersFactory", ["$http", function($http) {
 				headers: {'Content-Type': undefined}
 			}).then(function(returnedData) {
 				if (returnedData.data.result == "success") {
+					user.profile = profile.get("profile").name;
 					currentUser.profile = user.profile;
 					$http.post("/update", user).then(function(returnedData2) {
 						if (returnedData2.data.result == "success") {

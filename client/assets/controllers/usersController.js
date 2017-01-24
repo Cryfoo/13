@@ -38,10 +38,11 @@ app.controller("usersController", ["$scope", "usersFactory", "$location", functi
 					var type = profile.name.substring(index, profile.name.length).toLowerCase();
 					var fd = new FormData();
 					fd.append('profile', profile, $scope.user.username.toLowerCase() + type);
-					$scope.user.profile = $scope.user.username.toLowerCase() + type;
 					usersFactory.upload(fd, $scope.user, function(data) {
 						if (data.result == "LIMIT_FILE_SIZE") {
 							$scope.fileError = "File size limit is 5 MB.";
+						} else {
+							$scope.user.profile = $scope.user.username.toLowerCase() + type;
 						}
 						$location.url("/main");
 					});

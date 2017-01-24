@@ -23,6 +23,7 @@ app.controller("mainController", ["$scope", "usersFactory", "$uibModal", "$locat
 				if (data.result == "LIMIT_FILE_SIZE") {
 					$scope.fileError = "File size limit is 5 MB.";
 				} else {
+					$scope.user.profile = $scope.user.username.toLowerCase() + type;
 					setTimeout(function() {
 						$scope.$apply(function() {
 							$scope.user.profilePath = "static/profile/" + $scope.user.username + type + "?" + new Date().getTime();
