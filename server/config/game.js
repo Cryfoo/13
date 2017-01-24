@@ -442,6 +442,10 @@ game.on("connection", function(socket) {
 		p2Hand.sort();
 		p3Hand.sort();
 		p4Hand.sort();
+
+		// Uncomment following line for dubugging purpose
+		// recreate(roomNum);
+
 		pHandMap[players[0]] = p1Hand;
 		pHandMap[players[1]] = p2Hand;
 		pHandMap[players[2]] = p3Hand;
@@ -966,6 +970,7 @@ game.on("connection", function(socket) {
 			if (handType.run[0][0] == handType.double[i][0]) {
 				handType.single.push([handType.double[i][1]]);
 				handType.double.splice(i, 1);
+				i--;
 			} else if (handType.run[0][last] == handType.double[i][0]) {
 				handType.single.push([handType.double[i][1]]);
 				handType.double.splice(i, 1);
@@ -975,6 +980,7 @@ game.on("connection", function(socket) {
 			if (handType.run[0][0] == handType.triple[i][0]) {
 				handType.double.push([handType.triple[i][1], handType.triple[i][2]]);
 				handType.triple.splice(i, 1);
+				i--;
 			} else if (handType.run[0][last] == handType.triple[i][0]) {
 				handType.double.push([handType.triple[i][1], handType.triple[i][2]]);
 				handType.triple.splice(i, 1);
@@ -1548,7 +1554,7 @@ function getDate(type) {
 	return date;
 }
 
-// Translates cards' rank and suit to actual values
+// Translates the cards' rank and suit to actual values for game logs
 function translateCards(cards) {
 	var result = "";
 	for (var i = 0; i < cards.length; i++) {
@@ -1598,6 +1604,99 @@ function translateCards(cards) {
 			result += s;
 		}
 	}
+	return result;
+}
+
+// Example of debugging by recreating the same situation based on game logs
+function recreate(roomNum) {
+	// Copy and paste the starting hands from game log
+	var p1 = reverseTranslate("[3S, 5D, 6S, 6C, 9C, 9D, 10S, JH, QD, QH, AC, AD, 2D]");
+	var p2 = reverseTranslate("[3D, 6H, 8S, 8H, 9H, 10C, JS, JD, KH, AH, 2S, 2C, 2H]");
+	var p3 = reverseTranslate("[4S, 4H, 5S, 5C, 5H, 6D, 7S, 8C, 10D, 10H, JC, KC, AS]");
+	var p4 = reverseTranslate("[3C, 3H, 4C, 4D, 7C, 7D, 7H, 8D, 9S, QS, QC, KS, KD]");
+	var p1Hand = variables[roomNum].p1Hand;
+	var p2Hand = variables[roomNum].p2Hand;
+	var p3Hand = variables[roomNum].p3Hand;
+	var p4Hand = variables[roomNum].p4Hand;
+	p1Hand.splice(0, p1Hand.length);
+	p2Hand.splice(0, p2Hand.length);
+	p3Hand.splice(0, p3Hand.length);
+	p4Hand.splice(0, p4Hand.length);
+	for (var i = 0; i < 13; i++) {
+		p1Hand.push(p1[i]);
+		p2Hand.push(p2[i]);
+		p3Hand.push(p3[i]);
+		p4Hand.push(p4[i]);
+	}
+}
+
+// Translates the cards' rank and suit back to game values for debugging purpose
+function reverseTranslate(s) {
+	var result = [];
+	for (var i = 0; i < s.length; i++) {
+		if (s.charAt(i) == "," || s.charAt(i) == "]") {
+			if (s.charAt(i-3) == " " || s.charAt(i-3) == "[") {
+				result.push(rtHelper(s.substring(i-2, i)));
+			} else {
+				result.push(rtHelper(s.substring(i-3, i)));
+			}
+		}
+	}
+	return result;
+}
+
+// Helper function for the reverseTranslate function
+function rtHelper(card) {
+	var result = "";
+	if (card.length == 3) {
+		result += "08";
+		if (card.substring(2, 3) == "S") {
+			result += "A";
+		} else if (card.substring(2, 3) == "C") {
+			result += "B";
+		} else if (card.substring(2, 3) == "D") {
+			result += "C";
+		} else {
+			result += "D";
+		}
+	} else {
+		if (card.substring(0, 1) == "3") {
+			result += "01";
+		} else if (card.substring(0, 1) == "4") {
+			result += "02";
+		} else if (card.substring(0, 1) == "5") {
+			result += "03";
+		} else if (card.substring(0, 1) == "6") {
+			result += "04";
+		} else if (card.substring(0, 1) == "7") {
+			result += "05";
+		} else if (card.substring(0, 1) == "8") {
+			result += "06";
+		} else if (card.substring(0, 1) == "9") {
+			result += "07";
+		} else if (card.substring(0, 1) == "J") {
+			result += "09";
+		} else if (card.substring(0, 1) == "Q") {
+			result += "10";
+		} else if (card.substring(0, 1) == "K") {
+			result += "11";
+		} else if (card.substring(0, 1) == "A") {
+			result += "12";
+		} else {
+			result += "13";
+		}
+
+		if (card.substring(1, 2) == "S") {
+			result += "A";
+		} else if (card.substring(1, 2) == "C") {
+			result += "B";
+		} else if (card.substring(1, 2) == "D") {
+			result += "C";
+		} else {
+			result += "D";
+		}
+	}
+
 	return result;
 }
 
