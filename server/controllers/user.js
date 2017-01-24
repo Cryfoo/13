@@ -19,7 +19,7 @@ module.exports = {
 				console.log("Registration failed.");
 				res.json(err);
 			} else {
-				console.log("Registered successfully.");
+				console.log(user.username + " registered successfully.");
 				res.json(user);
 			}
 		});
@@ -35,7 +35,7 @@ module.exports = {
 					if (user.loggedIn) {
 						res.json({result: "This user is already logged in."});
 					} else {
-						console.log("Logged in successfully.");
+						console.log(user.original + " logged in successfully.");
 						Users.update({username: user.username}, {loggedIn: true}, function(err) {});
 						res.json(user);
 					}
@@ -53,7 +53,11 @@ module.exports = {
 				console.log("Update failed.");
 				res.json({result: err});
 			} else {
-				console.log("Profile updated.");
+				if (req.body.original.endsWith("s") || req.body.original.endsWith("s")) {
+					console.log(req.body.original +  "' profile picture updated.");
+				} else {
+					console.log(req.body.original +  "'s profile picture updated.");
+				}
 				res.json({result: "success"});
 			}
 		});
@@ -62,7 +66,7 @@ module.exports = {
 	upload: function(req, res) {
 		upload(req, res, function(err) {
 			if (err) {
-				console.log("Error uploading profile picture.");
+				console.log("Error uploading a profile picture.");
 				res.json({result: err.code});
 			} else {
 				console.log("Profile picture is uploaded.");

@@ -225,7 +225,7 @@ app.controller("gamesController", ["$scope", "usersFactory", "$routeParams", "$l
 		if (!$scope.freeze) {
 			$scope.currentTurn = data.player;
 			$scope.alertMsg = "";
-			if (data.player.charAt(data.player.length-1) == "s" || data.player.charAt(data.player.length-1) == "S") {
+			if (data.player.endsWith("s") || data.player.endsWith("S")) {
 				$scope.msg = data.player + "' turn!";
 			} else {
 				$scope.msg = data.player + "'s turn!";
