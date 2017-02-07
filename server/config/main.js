@@ -39,6 +39,7 @@ main.on("connection", function(socket) {
 				});
 			}, 5000);
 		} else {
+			console.log(username + " logged out.");
 			delete userLogin[username];
 		}
 	});

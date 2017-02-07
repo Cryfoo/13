@@ -141,7 +141,7 @@ app.controller("gamesController", ["$scope", "usersFactory", "$routeParams", "$l
 			if (i < data.dc.length-1) {
 				msg += ", " + data.dc[i];
 			} else {
-				msg += "and " + data.dc[data.dc.length-1];
+				msg += " and " + data.dc[data.dc.length-1];
 			}
 		}
 		$scope.msg = msg + " left the game. Game is frozen and will resume in";

@@ -252,8 +252,9 @@ game.on("connection", function(socket) {
 		}
 	});
 
-	// Freezes the game when players disconnect during the game, and waits 15 seconds for players to reconnect
+	// Freezes the game when players disconnect during the game, and waits 30 seconds for players to reconnect
 	function freeze() {
+		clearTimeout(variables[roomNum].freezeTimer);
 		variables[roomNum].freezeTimer = setTimeout(function() {
 			// Game resumes by dropping disconnected users who did not reconnect
 			if (variables[roomNum].freeze) {
@@ -284,7 +285,7 @@ game.on("connection", function(socket) {
 						if (newScore < 0) {
 							newScore = 0;
 						}
-						Users.update({username: username}, {score: newScore}, function(err) {});
+						Users.update({username: returnedUser.username}, {score: newScore}, function(err) {});
 					});
 				}
 
@@ -327,6 +328,7 @@ game.on("connection", function(socket) {
 
 				// Move to end of round if only one player left in round after drop
 				game.to(roomNum).emit("resume");
+				variables[roomNum].firstTurn = false;
 				if (round.length == 1) {
 					variables[roomNum].freeze = false;
 					endOfRound(1);
@@ -1285,15 +1287,19 @@ game.on("connection", function(socket) {
 					if (winners.indexOf(3) != -1) {
 						halfScore = true;
 					}
+					var temp = [];
 					for (var i = 0; i < winners.length; i++) {
 						if (typeof(winners[i]) != "number") {
 							var user = socketUserMap[winners[i]];
 							if (leavers.indexOf(user.original) != -1) {
-								var temp = winners[i];
+								temp.push(winners[i]);
 								winners.splice(i, 1);
-								winners.push(temp);
+								i--;
 							}
 						}
+					}
+					for (var i = 0; i < temp.length; i++) {
+						winners.push(temp[i]);
 					}
 					for (var i = 0; i < winners.length; i++) {
 						var score;
@@ -1330,7 +1336,7 @@ game.on("connection", function(socket) {
 									user.score = 0;
 								}
 								scoresArr.push(" -50");
-								text += " -" + score + " = " + user.score;
+								text += " -50 = " + user.score;
 							}
 							winnersUsername.push(user.original);
 							variables[roomNum].logs += text;
